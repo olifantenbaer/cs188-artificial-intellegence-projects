@@ -101,7 +101,9 @@ def depthFirstSearch(problem):
 
     #3. else, initialize the frontier with the start node
     frontier = util.Stack()
+    frontierStates = []
     frontier.push(node)
+    frontierStates.append(node.state)
     #print "Push:",node.state
 
     #4. initilized the explroed set (a set of state)
@@ -111,6 +113,7 @@ def depthFirstSearch(problem):
         if frontier.isEmpty():
             return [] # failuer????
         node = frontier.pop()
+        frontierStates.remove(node.state)
         #print "Pop:",node.state
 
         if problem.isGoalState(node.state):
@@ -119,17 +122,15 @@ def depthFirstSearch(problem):
         explored.append(node.state)
 
         for successor,action,stepCost in problem.getSuccessors(node.state):
-            child = Node(node,action,stepCost,successor)
+            child = Node(node,action,node.cost+stepCost,successor)
             #if child.state not in explored and child not in frontier.list:
             if child.state not in explored:
                 try: # update node with different path
-                    frontierStates = map(lambda x: x.state,frontier.list)
-                    index = frontierStates.index(child.state)
+                    index = map(lambda x: x.state,frontier.list).index(child.state)
                     frontier[index] = child
                 except: # not in frontier
                     frontier.push(child)
-
-
+                    frontierStates.append(child.state)
     
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
@@ -148,7 +149,9 @@ def breadthFirstSearch(problem):
 
     #3. else, initialize the frontier with the start node
     frontier = util.Queue()
+    frontierStates = []
     frontier.push(node)
+    frontierStates.append(node.state)
     #print "Push:",node.state
 
     #4. initilized the explroed set (a set of state)
@@ -158,6 +161,7 @@ def breadthFirstSearch(problem):
         if frontier.isEmpty():
             return [] # failuer????
         node = frontier.pop()
+        frontierStates.remove(node.state)
         #print "Pop:",node.state
 
         if problem.isGoalState(node.state):
@@ -167,17 +171,63 @@ def breadthFirstSearch(problem):
         explored.append(node.state)
 
         for successor,action,stepCost in problem.getSuccessors(node.state):
-            child = Node(node,action,stepCost,successor)
-            if child.state not in explored and child.state not in map(lambda x: x.state,frontier.list):
+            child = Node(node,action,node.cost+stepCost,successor)
+            if child.state not in explored and child.state not in frontierStates:
                 frontier.push(child)
+                frontierStates.append(child.state)
                 #print "Push the children: "
                 #print child.state
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    #1. initilize start node
+    parent = None
+    action = None
+    cost = 0
+    startState = problem.getStartState()
+    node = Node(parent,action,cost,startState)
 
+
+    #2. check if is goal state
+    if problem.isGoalState(node.state):
+        return node.path()
+
+    #3. else, initialize the frontier with the start node
+    frontier = util.PriorityQueue()
+    frontierStates = []
+    frontier.push(node,cost)
+    frontierStates.append(node.state)
+    
+    #print "Push:",node.state
+
+    #4. initilized the explroed set (a set of state)
+    explored = []
+
+    while True:
+        if frontier.isEmpty():
+            return [] # failuer????
+        node = frontier.pop()
+        frontierStates.remove(node.state)
+        #print "Pop:",node.state
+
+        if problem.isGoalState(node.state):
+            #return []
+            return node.path()
+
+        explored.append(node.state)
+
+        for successor,action,stepCost in problem.getSuccessors(node.state): 
+            child = Node(node,action,node.cost+stepCost,successor)
+            if child.state not in explored and child.state not in frontierStates:
+                frontier.push(child,child.cost)
+                frontierStates.append(child.state)
+                #print "Push the children: "
+                #print child.state
+
+
+
+    
 def nullHeuristic(state, problem=None):
     """
     A heuristic function estimates the cost from the current state to the nearest
