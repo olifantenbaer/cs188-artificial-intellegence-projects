@@ -102,6 +102,7 @@ def depthFirstSearch(problem):
     #3. else, initialize the frontier with the start node
     frontier = util.Stack()
     frontier.push(node)
+    #print "Push:",node.state
 
     #4. initilized the explroed set (a set of state)
     explored = []
@@ -110,6 +111,7 @@ def depthFirstSearch(problem):
         if frontier.isEmpty():
             return [] # failuer????
         node = frontier.pop()
+        #print "Pop:",node.state
 
         if problem.isGoalState(node.state):
             return node.path()
@@ -118,8 +120,16 @@ def depthFirstSearch(problem):
 
         for successor,action,stepCost in problem.getSuccessors(node.state):
             child = Node(node,action,stepCost,successor)
-            if child.state not in explored and child not in frontier.list:
-                frontier.push(child)
+            #if child.state not in explored and child not in frontier.list:
+            if child.state not in explored:
+                try: # update node with different path
+                    frontierStates = map(lambda x: x.state,frontier.list)
+                    index = frontierStates.index(child.state)
+                    frontier[index] = child
+                except: # not in frontier
+                    frontier.push(child)
+
+
     
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
