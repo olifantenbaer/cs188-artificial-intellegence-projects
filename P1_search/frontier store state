@@ -1,0 +1,3 @@
+frontier store state
+frontierNodeDic {state:node}
+when there is an update needed, update the frontierNodeDic

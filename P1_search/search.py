@@ -127,8 +127,11 @@ def depthFirstSearch(problem):
             if child.state not in explored:
                 try: # update node with different path
                     index = map(lambda x: x.state,frontier.list).index(child.state)
-                    frontier[index] = child
+                    frontier.list[index] = child
+                    #print frontier.list[0]
                 except: # not in frontier
+                    #print "ssss"
+                    #print frontier.list
                     frontier.push(child)
                     frontierStates.append(child.state)
     
@@ -141,7 +144,6 @@ def breadthFirstSearch(problem):
     cost = 0
     startState = problem.getStartState()
     node = Node(parent,action,cost,startState)
-
 
     #2. check if is goal state
     if problem.isGoalState(node.state):
@@ -182,6 +184,7 @@ def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
     #1. initilize start node
+
     parent = None
     action = None
     cost = 0
@@ -195,35 +198,34 @@ def uniformCostSearch(problem):
 
     #3. else, initialize the frontier with the start node
     frontier = util.PriorityQueue()
-    frontierStates = []
-    frontier.push(node,cost)
-    frontierStates.append(node.state)
+    frontierNodes = {}
+    frontier.push(startState,cost)
+    frontierNodes[startState] = node
     
-    #print "Push:",node.state
-
     #4. initilized the explroed set (a set of state)
     explored = []
 
     while True:
         if frontier.isEmpty():
             return [] # failuer????
-        node = frontier.pop()
-        frontierStates.remove(node.state)
-        #print "Pop:",node.state
+        state = frontier.pop()
+        node = frontierNodes.pop(state, None)
+        
 
-        if problem.isGoalState(node.state):
-            #return []
+        if problem.isGoalState(state):
             return node.path()
 
-        explored.append(node.state)
+        explored.append(state)
 
-        for successor,action,stepCost in problem.getSuccessors(node.state): 
+        for successor,action,stepCost in problem.getSuccessors(state): 
             child = Node(node,action,node.cost+stepCost,successor)
-            if child.state not in explored and child.state not in frontierStates:
-                frontier.push(child,child.cost)
-                frontierStates.append(child.state)
-                #print "Push the children: "
-                #print child.state
+            if child.state not in explored:
+                if frontierNodes.has_key(child.state):
+                    # update node with different path                    
+                    frontierNodes[child.state] = child
+                else: # not in frontier
+                    frontier.push(child.state,child.cost)
+                    frontierNodes[child.state] = child
 
 
 
