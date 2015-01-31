@@ -151,10 +151,9 @@ def breadthFirstSearch(problem):
 
     #3. else, initialize the frontier with the start node
     frontier = util.Queue()
-    frontierStates = []
-    frontier.push(node)
-    frontierStates.append(node.state)
-    #print "Push:",node.state
+    frontierNodes = {}
+    frontier.push(startState)
+    frontierNodes[startState] = node
 
     #4. initilized the explroed set (a set of state)
     explored = []
@@ -162,21 +161,20 @@ def breadthFirstSearch(problem):
     while True:
         if frontier.isEmpty():
             return [] # failuer????
-        node = frontier.pop()
-        frontierStates.remove(node.state)
+        state = frontier.pop()
+        node = frontierNodes.pop(state, None)
         #print "Pop:",node.state
 
-        if problem.isGoalState(node.state):
-            #return []
+        if problem.isGoalState(state):
             return node.path()
 
-        explored.append(node.state)
+        explored.append(state)
 
-        for successor,action,stepCost in problem.getSuccessors(node.state):
+        for successor,action,stepCost in problem.getSuccessors(state):
             child = Node(node,action,node.cost+stepCost,successor)
-            if child.state not in explored and child.state not in frontierStates:
-                frontier.push(child)
-                frontierStates.append(child.state)
+            if child.state not in explored and not frontierNodes.has_key(child.state):
+                frontier.push(child.state)
+                frontierNodes[child.state] = child
                 #print "Push the children: "
                 #print child.state
 
