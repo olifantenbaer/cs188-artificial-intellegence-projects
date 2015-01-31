@@ -195,6 +195,7 @@ def uniformCostSearch(problem):
     frontierNodes = {}
     frontier.push(startState,cost)
     frontierNodes[startState] = node
+    print "Push:",node.state
     
     #4. initilized the explroed set (a set of state)
     explored = []
@@ -202,8 +203,9 @@ def uniformCostSearch(problem):
     while True:
         if frontier.isEmpty():
             return [] # failuer????
-        state = frontier.pop()
+        state = frontier.pop() # pop the state with lowest cost
         node = frontierNodes.pop(state, None)
+        #print "Pop:",node.state
         
 
         if problem.isGoalState(state):
@@ -213,13 +215,17 @@ def uniformCostSearch(problem):
 
         for successor,action,stepCost in problem.getSuccessors(state): 
             child = Node(node,action,node.cost+stepCost,successor)
-            if child.state not in explored:
-                if frontierNodes.has_key(child.state):
-                    # update node with different path                    
+            if child.state not in explored and not frontierNodes.has_key(child.state):
+                # not in frontier
+                frontier.push(child.state,child.cost)
+                frontierNodes[child.state] = child
+                #print "Push",child.state
+            elif frontierNodes.has_key(child.state):
+                old_cost = frontierNodes[child.state].cost
+                if old_cost > child.cost:
                     frontierNodes[child.state] = child
-                else: # not in frontier
-                    frontier.push(child.state,child.cost)
-                    frontierNodes[child.state] = child
+
+
 
 
 
