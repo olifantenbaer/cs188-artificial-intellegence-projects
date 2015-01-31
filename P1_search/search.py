@@ -139,6 +139,7 @@ def breadthFirstSearch(problem):
     #3. else, initialize the frontier with the start node
     frontier = util.Queue()
     frontier.push(node)
+    #print "Push:",node.state
 
     #4. initilized the explroed set (a set of state)
     explored = []
@@ -147,16 +148,20 @@ def breadthFirstSearch(problem):
         if frontier.isEmpty():
             return [] # failuer????
         node = frontier.pop()
+        #print "Pop:",node.state
 
         if problem.isGoalState(node.state):
+            #return []
             return node.path()
 
         explored.append(node.state)
 
         for successor,action,stepCost in problem.getSuccessors(node.state):
             child = Node(node,action,stepCost,successor)
-            if child.state not in explored and child not in frontier.list:
+            if child.state not in explored and child.state not in map(lambda x: x.state,frontier.list):
                 frontier.push(child)
+                #print "Push the children: "
+                #print child.state
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
