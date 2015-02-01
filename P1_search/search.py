@@ -177,56 +177,7 @@ def breadthFirstSearch(problem):
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    #1. initilize start node
-
-    parent = None
-    action = None
-    cost = 0
-    startState = problem.getStartState()
-    node = Node(parent,action,cost,startState)
-
-
-    #2. check if is goal state
-    if problem.isGoalState(node.state):
-        return node.path()
-
-    #3. else, initialize the frontier with the start node
-    frontier = util.PriorityQueue()
-    frontierNodes = {}
-    frontier.push(startState,cost)
-    frontierNodes[startState] = node
-    print "Push:",node.state
-    
-    #4. initilized the explroed set (a set of state)
-    explored = []
-
-    while True:
-        if frontier.isEmpty():
-            return None # failure
-        state = frontier.pop() # pop the state with lowest cost
-        node = frontierNodes.pop(state, None)
-        #print "Pop:",node.state
-        
-
-        if problem.isGoalState(state):
-            return node.path()
-
-        explored.append(state)
-
-        for successor,action,stepCost in problem.getSuccessors(state): 
-            child = Node(node,action,node.cost+stepCost,successor)
-            if child.state not in explored and not frontierNodes.has_key(child.state):
-                # not in frontier
-                frontier.push(child.state,child.cost)
-                frontierNodes[child.state] = child
-                #print "Push",child.state
-            elif frontierNodes.has_key(child.state):
-                old_cost = frontierNodes[child.state].cost
-                if old_cost > child.cost:
-                    frontierNodes[child.state] = child
-                    #ADD CODE HERE
-                    #also need to update the priority in frontier, or you might be wrong even
-                    #you can pass all test cases
+    return aStarSearch(problem)
     
 def nullHeuristic(state, problem=None):
     """
@@ -238,68 +189,55 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    #1. initilize start node
 
+    #1. initilize the start node
     parent = None
     action = None
+    pathCost = 0
     startState = problem.getStartState()
-    g = 0   
-    h = heuristic(startState,problem)
-    f = g+h
-    node = Node(parent,action,g,startState)
+    node = Node(parent,action,pathCost,startState)
 
-    #node = 
     #2. check if is goal state
     if problem.isGoalState(node.state):
         return node.path()
 
-    #3. else, initialize the frontier with the start node
-    frontier = util.PriorityQueue()
-    frontierNodes = {}
-    frontier.push(startState,f)
-    frontierNodes[startState] = [node,f]
-    print "Push",node.state,g,h
+    #3. else, define the priority function (return f=g+h)
+    def priorityFunction(node):
+        return node.cost+heuristic(node.state,problem)
+
+    #4. initialize the frontier with the start node
+    frontier = util.PriorityQueueWithFunction(priorityFunction)
+    frontier.push(node)
+    frontierStates = {}
+    frontierStates[startState] = priorityFunction(node)
     
     #4. initilized the explroed set (a set of state)
     explored = []
 
     while True:
         if frontier.isEmpty():
-            return None # failuer
-        state = frontier.pop() # pop the state with lowest cost
-        #print state
-        foo = frontierNodes.pop(state, None)
-        if foo == None:
+            return None # failure
+
+        node = frontier.pop()
+        if frontierStates.pop(node.state,None) == None:
             continue
 
-        node = foo[0]
-        #print "Pop",state,f
-        #print "Pop",node.state
-        
-
-        if problem.isGoalState(state):
+        if problem.isGoalState(node.state):
             return node.path()
 
-        explored.append(state)
+        explored.append(node.state)
 
-        for successor,action,stepCost in problem.getSuccessors(state):         
+        for successor,action,stepCost in problem.getSuccessors(node.state):         
             child = Node(node,action,node.cost+stepCost,successor)
-            g = child.cost
-            h = heuristic(successor,problem)
-            f = g+h
-            if child.state not in explored and not frontierNodes.has_key(child.state):
-                # not in frontier
-                frontier.push(child.state,f)
-                frontierNodes[child.state] = [child,f]
-                #print "Push",child.state,f
-            elif frontierNodes.has_key(child.state):
-                old_f = frontierNodes[child.state][1]
-                if old_f > f:#update
-                    frontierNodes[child.state] = [child,f]
-                    frontier.push(child.state,f)
-                    #print "Push",child.state,f
-                    #ADD CODE HERE
-                    #also need to update the priority in frontier, or you might be wrong 
+            f = priorityFunction(child)
+            if child.state not in explored and not frontierStates.has_key(child.state):
+                frontier.push(child)
+                frontierStates[child.state] = f
+            elif frontierStates.has_key(child.state):
+                old_f = frontierStates[child.state]
+                if old_f > f:# if in frontier with higher f, update
+                    frontier.push(child)
+                    frontierStates[child.state] = f
     
 
 class Node:
