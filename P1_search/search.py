@@ -248,7 +248,7 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     f = g+h
     node = Node(parent,action,g,startState)
 
-
+    #node = 
     #2. check if is goal state
     if problem.isGoalState(node.state):
         return node.path()
@@ -267,7 +267,13 @@ def aStarSearch(problem, heuristic=nullHeuristic):
         if frontier.isEmpty():
             return None # failuer
         state = frontier.pop() # pop the state with lowest cost
-        node = frontierNodes.pop(state, None)[0]
+        #print state
+        foo = frontierNodes.pop(state, None)
+        if foo == None:
+            continue
+
+        node = foo[0]
+        #print "Pop",state,f
         #print "Pop",node.state
         
 
@@ -285,11 +291,15 @@ def aStarSearch(problem, heuristic=nullHeuristic):
                 # not in frontier
                 frontier.push(child.state,f)
                 frontierNodes[child.state] = [child,f]
-                #print "Push",child.state
+                #print "Push",child.state,f
             elif frontierNodes.has_key(child.state):
                 old_f = frontierNodes[child.state][1]
-                if old_f > f:
+                if old_f > f:#update
                     frontierNodes[child.state] = [child,f]
+                    frontier.push(child.state,f)
+                    #print "Push",child.state,f
+                    #ADD CODE HERE
+                    #also need to update the priority in frontier, or you might be wrong 
     
 
 class Node:
