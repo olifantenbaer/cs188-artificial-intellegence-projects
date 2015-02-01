@@ -71,108 +71,28 @@ def tinyMazeSearch(problem):
     w = Directions.WEST
     return  [s, s, w, s, w, w, s, w]
 
-def depthFirstSearch(problem):
-    """
-    Search the deepest nodes in the search tree first.
-
-    Your search algorithm needs to return a list of actions that reaches the
-    goal. Make sure to implement a graph search algorithm.
-
-    To get started, you might want to try some of these simple commands to
-    understand the search problem that is being passed in:
-
-    print "Start:", problem.getStartState()
-    print "Is the start a goal?", problem.isGoalState(problem.getStartState())
-    print "Start's successors:", problem.getSuccessors(problem.getStartState())
-    """
-    "*** YOUR CODE HERE ***"
-
-    #1. initilize start node
-    parent = None
-    action = None
-    cost = 0
-    startState = problem.getStartState()
-    node = Node(parent,action,cost,startState)
-
-
-    #2. check if is goal state
-    if problem.isGoalState(node.state):
-        return node.path()
-
-    #3. else, initialize the frontier with the start node
-    frontier = util.Stack()
-    frontierNodes = {}
-    frontier.push(startState)
-    frontierNodes[startState] = node
-    #print "Push:",node.state
-
-    #4. initilized the explroed set (a set of state)
-    explored = []
-
-    while True:
-        if frontier.isEmpty():
-            return None # failuer
-        state = frontier.pop()
-        node = frontierNodes.pop(state, None)
-        #print "Pop:",node.state
-
-        if problem.isGoalState(state):
-            return node.path()
-
-        explored.append(state)
-
-        for successor,action,stepCost in problem.getSuccessors(state):
-            child = Node(node,action,node.cost+stepCost,successor)
-            if child.state not in explored:
-                if frontierNodes.has_key(child.state):
-                    # update node with different path                    
-                    frontierNodes[child.state] = child
-                else: # not in frontier
-                    frontier.push(child.state)
-                    frontierNodes[child.state] = child
     
+def depthFirstSearch(problem):
+    """Search the node that has the lowest combined cost and heuristic first."""
+    "*** YOUR CODE HERE ***"
+    #define the priority function (return f=g+h)
+    def priorityFunction(node):
+        if len(node.path()) == 0:
+            return float("inf")
+        else:
+            return 1.0/len(node.path())
+
+    return geneticSearch(problem,priorityFunction)
+
+
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    #1. initilize start node
-    parent = None
-    action = None
-    cost = 0
-    startState = problem.getStartState()
-    node = Node(parent,action,cost,startState)
+    #define the priority function (return f=g+h)
+    def priorityFunction(node):
+        return len(node.path())
 
-    #2. check if is goal state
-    if problem.isGoalState(node.state):
-        return node.path()
-
-    #3. else, initialize the frontier with the start node
-    frontier = util.Queue()
-    frontierNodes = {}
-    frontier.push(startState)
-    frontierNodes[startState] = node
-
-    #4. initilized the explroed set (a set of state)
-    explored = []
-
-    while True:
-        if frontier.isEmpty():
-            return None # failuer
-        state = frontier.pop()
-        node = frontierNodes.pop(state, None)
-        #print "Pop:",node.state
-
-        if problem.isGoalState(state):
-            return node.path()
-
-        explored.append(state)
-
-        for successor,action,stepCost in problem.getSuccessors(state):
-            child = Node(node,action,node.cost+stepCost,successor)
-            if child.state not in explored and not frontierNodes.has_key(child.state):
-                frontier.push(child.state)
-                frontierNodes[child.state] = child
-                #print "Push the children: "
-                #print child.state
+    return geneticSearch(problem,priorityFunction)
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
@@ -189,7 +109,13 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
+    #define the priority function (return f=g+h)
+    def priorityFunction(node):
+        return node.cost+heuristic(node.state,problem)
 
+    return geneticSearch(problem,priorityFunction,heuristic)
+    
+def geneticSearch(problem,priorityFunction,heuristic=nullHeuristic):
     #1. initilize the start node
     parent = None
     action = None
@@ -199,13 +125,9 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 
     #2. check if is goal state
     if problem.isGoalState(node.state):
-        return node.path()
+        return node.path() 
 
-    #3. else, define the priority function (return f=g+h)
-    def priorityFunction(node):
-        return node.cost+heuristic(node.state,problem)
-
-    #4. initialize the frontier with the start node
+    #3. initialize the frontier with the start node
     frontier = util.PriorityQueueWithFunction(priorityFunction)
     frontier.push(node)
     frontierStates = {}
@@ -238,7 +160,8 @@ def aStarSearch(problem, heuristic=nullHeuristic):
                 if old_f > f:# if in frontier with higher f, update
                     frontier.push(child)
                     frontierStates[child.state] = f
-    
+
+
 
 class Node:
     def __init__(self,parent,action,cost,state):
