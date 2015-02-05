@@ -389,8 +389,6 @@ def cornersHeuristic(state, problem):
     for index in range(len(corners)):
         if not state[index+1]:#if the corner is not explored
             destPositions.append(corners[index])
-    #print destPositions,shortestManhattanCostThroughAllDestinations(startPosition,destPositions)
-    #util.manhattanDistance( pos1, pos2 )
     return shortestManhattanCostThroughAllDestinations(startPosition,destPositions)
 
 
@@ -499,7 +497,86 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    foodPositions = foodGrid.asList()
+
+    # goal state check
+    if foodPositions==[]:return 0
+
+
+    # 3. sum over food, distance to closest food/pacman
+    # Score: 3/4 (11470 nodes expanded)
+    '''allManhattan = 0
+    allPositions = [position] + foodPositions
+    
+    for pos in foodPositions:
+        minManhattan = 999999
+        for pos2 in allPositions:
+            dist = util.manhattanDistance( pos2, pos )
+            if dist == 0: 
+                continue
+            if dist < minManhattan:
+                minManhattan = dist
+        allManhattan += minManhattan
+
+    minManhattan = 999999
+    for pos in foodPositions:
+        dist = util.manhattanDistance( position, pos )
+        if dist < minManhattan:
+            minManhattan = dist
+    allManhattan = (allManhattan + minManhattan)/2
+    return allManhattan'''
+
+        # # 5. combine 2 & 3
+    # # Score: 3/4 (10908 nodes expanded)
+    # minManhattan = 999999
+    # for pos in foodPositions:
+    #     dist = util.manhattanDistance( position, pos )
+    #     if dist < minManhattan:
+    #         minManhattan = dist
+    # estimate = minManhattan + len(foodPositions) - 1
+    # return estimate
+
+    # my solution, subset of foodPositions
+    # # inconsistent
+    # subsetFoodPositions = []
+    # for pos in foodPositions:
+    #     dist = util.manhattanDistance( position, pos )
+    #     if dist<=3:
+    #         subsetFoodPositions.append(pos)
+    # if len(subsetFoodPositions) == 0: return 4
+    # return shortestManhattanCostThroughAllDestinations(position,subsetFoodPositions)
+
+
+
+    # minimum spanning tree
+    totalLength = 0
+    MST = [position]
+    while len(foodPositions) != 0:
+        xy1,xy2,minimum = findClosestManhattanPair(MST,foodPositions)
+        totalLength += minimum
+        MST.append(xy2)
+        foodPositions.remove(xy2)
+
+    return totalLength
+
+
+def chebyshevDistane(xy1,xy2):
+    return max(abs( xy1[0] - xy2[0] ), abs( xy1[1] - xy2[1] ))
+
+
+def findClosestManhattanPair(positions1,positions2):
+    minimum = float('inf')
+    position1 = None
+    position2 = None
+    for pos1 in positions1:
+        for pos2 in positions2:
+            distance = util.manhattanDistance (pos1,pos2)
+            if distance < minimum:
+                minimum = distance
+                position1 = pos1
+                position2 = pos2
+    return (position1,position2,minimum)
+
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
