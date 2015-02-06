@@ -573,6 +573,8 @@ def findClosestEuclideanPair(positions1,positions2):
                 position2 = pos2
     return (position1,position2,minimum)
 
+def ChristofidesHeuristic(state, problem):
+    pass
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -603,7 +605,9 @@ class ClosestDotSearchAgent(SearchAgent):
         problem = AnyFoodSearchProblem(gameState)
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return search.breadthFirstSearch(problem)
+
+
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -639,7 +643,11 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x,y = state
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        if state in self.food.asList():
+            return True
+        else:
+            return False
+        
 
 def mazeDistance(point1, point2, gameState):
     """

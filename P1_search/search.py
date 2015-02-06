@@ -116,6 +116,8 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     return geneticSearch(problem,priorityFunction,heuristic)
     
 def geneticSearch(problem,priorityFunction,heuristic=nullHeuristic):
+    #return a list of actions
+
     #1. initilize the start node
     parent = None
     action = None
