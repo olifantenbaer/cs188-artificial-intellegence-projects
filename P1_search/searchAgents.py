@@ -496,14 +496,59 @@ def foodHeuristic(state, problem):
     Subsequent calls to this heuristic can access
     problem.heuristicInfo['wallCount']
     """
+    return max(MSTEuclideanHeuristic(state, problem),allManhattanHeuristic(state, problem),NNManhattanHeuristic(state, problem))
+
+def allManhattanHeuristic(state, problem):
+    #sum over food, distance to closest food/pacman
+    # Score: 3/4 (11470 nodes expanded)
     position, foodGrid = state
-    "*** YOUR CODE HERE ***"
     foodPositions = foodGrid.asList()
-    #print "State: ",position, foodPositions
-    # goal state check
     if len(foodPositions)==0:return 0
 
+    allManhattan = 0
+    allPositions = [position] + foodPositions
+    
+    for pos in foodPositions:
+        minManhattan = 999999
+        for pos2 in allPositions:
+            dist = util.manhattanDistance( pos2, pos )
+            if dist == 0: 
+                continue
+            if dist < minManhattan:
+                minManhattan = dist
+        allManhattan += minManhattan
+
+    minManhattan = 999999
+    for pos in foodPositions:
+        dist = util.manhattanDistance( position, pos )
+        if dist < minManhattan:
+            minManhattan = dist
+    allManhattan = (allManhattan + minManhattan)/2
+    return allManhattan
+
+
+def NNManhattanHeuristic(state, problem):
+    #nearest neighbor with number of foods left
+    position, foodGrid = state
+    foodPositions = foodGrid.asList()
+    if len(foodPositions)==0:return 0
+    # Score: 3/4 (10908 nodes expanded)
+    minManhattan = 999999
+    for pos in foodPositions:
+        dist = util.manhattanDistance( position, pos )
+        if dist < minManhattan:
+            minManhattan = dist
+    estimate = minManhattan + len(foodPositions) - 1
+    return estimate
+
+
+def MSTEuclideanHeuristic(state, problem):
     # minimum spanning tree
+
+    position, foodGrid = state
+    foodPositions = foodGrid.asList()
+    if len(foodPositions)==0:return 0
+    
     totalLength = 0
     MST = [position]
     while len(foodPositions) != 0:

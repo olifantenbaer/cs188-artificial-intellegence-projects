@@ -152,14 +152,17 @@ def geneticSearch(problem,priorityFunction,heuristic=nullHeuristic):
         for successor,action,stepCost in problem.getSuccessors(node.state):         
             child = Node(node,action,node.cost+stepCost,successor)
             f = priorityFunction(child)
-            if child.state not in explored and not frontierStates.has_key(child.state):
+            if child.state not in explored:
+                frontier.push(child)
+                frontierStates[child.state] = f
+            '''if child.state not in explored and not frontierStates.has_key(child.state):
                 frontier.push(child)
                 frontierStates[child.state] = f
             elif frontierStates.has_key(child.state):
                 old_f = frontierStates[child.state]
                 if old_f > f:# if in frontier with higher f, update
                     frontier.push(child)
-                    frontierStates[child.state] = f
+                    frontierStates[child.state] = f'''
 
 
 
