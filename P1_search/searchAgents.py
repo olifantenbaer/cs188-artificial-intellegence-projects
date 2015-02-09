@@ -266,7 +266,7 @@ def euclideanHeuristic(position, problem, info={}):
     return ( (xy1[0] - xy2[0]) ** 2 + (xy1[1] - xy2[1]) ** 2 ) ** 0.5
 
 #####################################################
-# This portion is incomplete.  Time to write code!  #
+# Question 5 & 6: Corners Problem  #
 #####################################################
 
 class CornersProblem(search.SearchProblem):
@@ -367,7 +367,6 @@ class CornersProblem(search.SearchProblem):
             if self.walls[x][y]: return 999999
         return len(actions)
 
-
 def cornersHeuristic(state, problem):
     """
     A heuristic for the CornersProblem that you defined.
@@ -381,10 +380,30 @@ def cornersHeuristic(state, problem):
     shortest path from the state to a goal of the problem; i.e.  it should be
     admissible (as well as consistent).
     """
+
     corners = problem.corners # These are the corner coordinates
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
+
+    "*** helper function ***"
+    # Find the shortest manhattan cost by enumeration to solve the TSP problem
+    # WARNING: Cannot deal with n-goal problems when n grows big enough
+    def shortestManhattanCostThroughAllDestinations(startPosition,destPositions):
+        if len(destPositions) == 0:
+            return 0
+
+        candidates = []
+        for pos in destPositions:
+            a = util.manhattanDistance( startPosition, pos )
+            cpyDestPositions = copy.deepcopy(destPositions)
+            cpyDestPositions.remove(pos)
+            b = shortestManhattanCostThroughAllDestinations(pos,cpyDestPositions)
+            candidates.append(a+b)
+        return min(candidates)
+    "*** END of helper function ***"
+
+
     startPosition = state[0]
     destPositions = []
     for index in range(len(corners)):
@@ -392,25 +411,16 @@ def cornersHeuristic(state, problem):
             destPositions.append(corners[index])
     return shortestManhattanCostThroughAllDestinations(startPosition,destPositions)
 
-
-def shortestManhattanCostThroughAllDestinations(startPosition,destPositions):
-    if len(destPositions) == 0:
-        return 0
-
-    candidates = []
-    for pos in destPositions:
-        a = util.manhattanDistance( startPosition, pos )
-        cpyDestPositions = copy.deepcopy(destPositions)
-        cpyDestPositions.remove(pos)
-        b = shortestManhattanCostThroughAllDestinations(pos,cpyDestPositions)
-        candidates.append(a+b)
-    return min(candidates)
-
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
     def __init__(self):
         self.searchFunction = lambda prob: search.aStarSearch(prob, cornersHeuristic)
         self.searchType = CornersProblem
+
+#####################################################
+# Question 7 & 8: FoodSearchProblem  #
+#####################################################
+
 
 class FoodSearchProblem:
     """
@@ -496,11 +506,19 @@ def foodHeuristic(state, problem):
     Subsequent calls to this heuristic can access
     problem.heuristicInfo['wallCount']
     """
-    return max(MSTEuclideanHeuristic(state, problem),allManhattanHeuristic(state, problem),NNManhattanHeuristic(state, problem))
+    # 7263 nodes and takes lots of time
+    #return RectilinearMinimumSteinerSpanningTreeHeuristic(state, problem)
+    foo = RectilinearMinimumSteinerSpanningTreeHeuristic(state, problem)
 
-def allManhattanHeuristic(state, problem):
-    #sum over food, distance to closest food/pacman
-    # Score: 3/4 (11470 nodes expanded)
+
+    foo2 = MSTEuclideanHeuristic(state, problem)
+
+    # 7257 nodes in 227.4s
+    return max(foo,foo2)
+
+#sum over food, distance to closest food/pacman
+# Score: 3/4 (11470 nodes expanded)
+def allManhattanHeuristic(state, problem): 
     position, foodGrid = state
     foodPositions = foodGrid.asList()
     if len(foodPositions)==0:return 0
@@ -526,13 +544,12 @@ def allManhattanHeuristic(state, problem):
     allManhattan = (allManhattan + minManhattan)/2
     return allManhattan
 
-
+# nearest neighbor plus number of food left
+# Score: 3/4 (10908 nodes expanded)
 def NNManhattanHeuristic(state, problem):
-    #nearest neighbor with number of foods left
     position, foodGrid = state
     foodPositions = foodGrid.asList()
     if len(foodPositions)==0:return 0
-    # Score: 3/4 (10908 nodes expanded)
     minManhattan = 999999
     for pos in foodPositions:
         dist = util.manhattanDistance( position, pos )
@@ -541,10 +558,10 @@ def NNManhattanHeuristic(state, problem):
     estimate = minManhattan + len(foodPositions) - 1
     return estimate
 
-
+# construct a minimum spanning tree; use the weight as heuristic value
+# Score: 4/4 (7547 nodes expanded)
 def MSTEuclideanHeuristic(state, problem):
-    # minimum spanning tree
-
+    
     position, foodGrid = state
     foodPositions = foodGrid.asList()
     if len(foodPositions)==0:return 0
@@ -553,12 +570,16 @@ def MSTEuclideanHeuristic(state, problem):
     MST = [position]
     while len(foodPositions) != 0:
         xy1,xy2,minimum = findClosestEuclideanPair(MST,foodPositions)
+
+        #xy1,xy2,minimum = findClosestEuclideanPair2(MST,foodPositions,state)
         #print xy1,xy2,minimum
         totalLength += minimum
         MST.append(xy2)
         foodPositions.remove(xy2)
     return totalLength
 
+# find the cloest pair of points in two sets
+# return a triple in the form of (point1, point2, distance)
 def findClosestEuclideanPair(positions1,positions2):
     minimum = float('inf')
     position1 = None
@@ -566,15 +587,165 @@ def findClosestEuclideanPair(positions1,positions2):
     for pos1 in positions1:
         for pos2 in positions2:
             #distance = util.manhattanDistance (pos1,pos2)
-            distance = math.sqrt((pos1[0] - pos2[0])**2+(pos1[1] - pos2[1])**2)
+            distance = ((pos1[0] - pos2[0])**2+(pos1[1] - pos2[1])**2)**0.5
             if distance < minimum:
                 minimum = distance
                 position1 = pos1
                 position2 = pos2
     return (position1,position2,minimum)
 
-def ChristofidesHeuristic(state, problem):
-    pass
+def MSTManhattanHeuristic(state, problem):
+    position, foodGrid = state
+    foodPositions = foodGrid.asList()
+    if len(foodPositions)==0:return 0
+    
+    totalLength = 0
+    MST = [position]
+    while len(foodPositions) != 0:
+        xy1,xy2,minimum = findClosestManhattanPair(MST,foodPositions)
+        #print xy1,xy2,minimum
+        totalLength += minimum
+        MST.append(xy2)
+        foodPositions.remove(xy2)
+    return totalLength
+
+
+#A is a list of points; A is not []
+def computeMSTCost(lst):
+    A = copy.deepcopy(lst)
+    totalLength = 0
+    MST = [A.pop()]
+    while len(A) != 0:
+        xy1,xy2,minimum = findClosestManhattanPair(MST,A)
+        totalLength += minimum
+        MST.append(xy2)
+        A.remove(xy2)
+    return totalLength
+
+
+def remove_foo(P,S):
+    A = P+S
+    MST = [A.pop()]
+    MSTWithDegree = {MST[0]:0}
+    while len(A) != 0:
+        xy1,xy2,minimum = findClosestManhattanPair(MST,A)
+        MST.append(xy2)
+        MSTWithDegree[xy1] += 1
+        MSTWithDegree[xy2] =1
+        A.remove(xy2)
+
+    for key in MSTWithDegree:
+        if key in S and MSTWithDegree[key] <3:
+            S.remove(key)
+
+# find the cloest pair of points in two sets
+# return a triple in the form of (point1, point2, distance)
+def findClosestManhattanPair(positions1,positions2):
+    minimum = float('inf')
+    position1 = None
+    position2 = None
+    for pos1 in positions1:
+        for pos2 in positions2:
+            #distance = util.manhattanDistance (pos1,pos2)
+            distance = abs(pos1[0] - pos2[0])+abs(pos1[1] - pos2[1])
+            if distance < minimum:
+                minimum = distance
+                position1 = pos1
+                position2 = pos2
+    return (position1,position2,minimum)
+
+def RectilinearMinimumSteinerSpanningTreeHeuristic(state,problem):
+    position, foodGrid = state
+    foodPositions = foodGrid.asList()
+    if len(foodPositions)==0:return 0
+
+    P = copy.deepcopy(foodPositions) + [position]
+    S=[]
+    Candidate_Set = computeCandidateSet(P,S)
+    while len(Candidate_Set) != 0:
+        # Step1: find x in Candidate Set which maximizes delta_MST (P union S, {x})
+        maximumDelta = -float('inf')
+        x = None
+        for candidate in Candidate_Set:
+            #print maximumDelta
+            #print candidate
+            delta = computeDeltaMST(P+S,[candidate])
+            #print delta
+            if delta > maximumDelta:
+                maximumDelta = delta
+                x = candidate
+        # Step2: update S
+        S = S+[x]
+
+        # Step3: Remove points in S which have degree <= 2 in MST(P union S) 
+        remove_foo(P,S)
+        #P=[(1, 2), (6, 2), (4, 3)]
+        '''print "*********"
+        print Candidate_Set
+        print P
+        print S'''
+        Candidate_Set = computeCandidateSet(P,S) 
+    return computeMSTCost(P+S)
+
+
+
+
+def computeCandidateSet(P,S): 
+    H = computeH(P+S)
+    cpy_H = copy.deepcopy(H)
+    for candidate in cpy_H:
+        delta = computeDeltaMST(P+S,[candidate])
+        if delta <= 0:
+            H.remove(candidate)
+    return H
+
+
+#compute H(P),  i.e., the intersection points of all horizontal and
+#vertical lines passing through points of P
+def computeH(foo):
+    H = []
+    # Step 1: find all possible x and y
+    xSet=[]
+    ySet=[]
+    for xy in foo:
+        x = xy[0]
+        y = xy[1]
+        if x not in xSet:
+            xSet.append(x)
+        if y not in ySet:
+            ySet.append(y)
+
+    # Step 2: find all steiner candidates
+    for x in xSet:
+        for y in ySet:
+            if (x,y) not in foo:
+                H.append((x,y))
+
+    return H
+
+
+#delta_MST(A, B) = cost(MST(A)) -cost(MST(A union B))
+def computeDeltaMST(A,B):
+    return computeMSTCost(A) - computeMSTCost(A+B)
+
+
+
+'''IN PROGRESS'''
+
+def wallsManhattanPenalty(xy1,xy2,walls):
+    pass#if xy1[0]
+
+
+# This function calculate how many walls are in this positions
+# positions is a series of points forming a path
+def wallsPenalty(positions,walls):
+    penalty = 0
+    for pos in positions:
+        if walls[pos[0]][pos[1]]:
+            penalty +=1
+    return penalty
+
+'''IN PROGRESS'''
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -607,8 +778,6 @@ class ClosestDotSearchAgent(SearchAgent):
         "*** YOUR CODE HERE ***"
         return search.breadthFirstSearch(problem)
 
-
-
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
     A search problem for finding a path to any food.
@@ -640,13 +809,8 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         The state is Pacman's position. Fill this in with a goal test that will
         complete the problem definition.
         """
-        x,y = state
-
         "*** YOUR CODE HERE ***"
-        if state in self.food.asList():
-            return True
-        else:
-            return False
+        return state in self.food.asList()
         
 
 def mazeDistance(point1, point2, gameState):
