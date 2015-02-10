@@ -508,13 +508,33 @@ def foodHeuristic(state, problem):
     """
     # 7263 nodes and takes lots of time
     #return RectilinearMinimumSteinerSpanningTreeHeuristic(state, problem)
-    foo = RectilinearMinimumSteinerSpanningTreeHeuristic(state, problem)
+    #foo = RectilinearMinimumSteinerSpanningTreeHeuristic(state, problem)
 
 
-    foo2 = MSTEuclideanHeuristic(state, problem)
+    #foo2 = MSTEuclideanHeuristic(state, problem)
+    foo2 = MSTManhattanHeuristicExceptStatePosition(state, problem)
+
+    # position, foodGrid = state
+    # foodPositions = foodGrid.asList()
+    # if len(foodPositions)==1:
+    #     if position[0] = foodPositions[0][0] or position[1] = foodPositions[0][1]:
+
+    #     print problem.walls
+
 
     # 7257 nodes in 227.4s
-    return max(foo,foo2)
+    return foo2
+    #return max(foo,foo2)
+
+# def wallsInAStraightPath(xy1,xy2,walls):
+#     if xy1[0] = xy2[0]:
+#         if xy1[1]>xy2[1]:
+#             xy3=xy1
+#             xy1=xy2
+#             xy2=xy1
+#         for i in range(xy2[1]-xy1[1]):
+#             xy3 = (xy1[0],xy1[1]+i)
+
 
 #sum over food, distance to closest food/pacman
 # Score: 3/4 (11470 nodes expanded)
@@ -578,6 +598,92 @@ def MSTEuclideanHeuristic(state, problem):
         foodPositions.remove(xy2)
     return totalLength
 
+
+
+def shortestManhattanCostThroughAllDestinations(startPosition,destPositions):
+    if len(destPositions) == 0:
+        return 0
+
+    candidates = []
+    for pos in destPositions:
+        a = util.manhattanDistance( startPosition, pos )
+        cpyDestPositions = copy.deepcopy(destPositions)
+        cpyDestPositions.remove(pos)
+        b = shortestManhattanCostThroughAllDestinations(pos,cpyDestPositions)
+        candidates.append(a+b)
+    return min(candidates)
+
+# Score: 4/4 
+# 7137 in 16.5 second use 'if len(foodPositions) <1:'
+# 7123 in 16.3 second use 'if len(foodPositions) <6:'
+# 7103 in 62.2 second use 'if len(foodPositions) <7:'
+def MSTManhattanHeuristicExceptStatePosition(state, problem):
+
+    walls = copy.deepcopy(problem.walls)
+
+    position, foodGrid = state
+    foodPositions = foodGrid.asList()
+    if len(foodPositions)==0:return 0
+
+    if len(foodPositions) <6:# you can use 7 here
+        return shortestManhattanCostThroughAllDestinations(position,foodPositions)
+    
+    cpy = copy.deepcopy(foodPositions)
+    totalLength = 0
+    MST = [cpy.pop()]
+    while len(cpy) != 0:
+        xy1,xy2,minimum = findClosestManhattanPair(MST,cpy)
+
+        #xy1,xy2,minimum = findClosestEuclideanPair2(MST,foodPositions,state)
+        #print xy1,xy2,minimum
+        totalLength += minimum
+        MST.append(xy2)
+        cpy.remove(xy2)
+
+        #add wall penalty
+        y1 = min(xy1[1],xy2[1])
+        y2 = max(xy1[1],xy2[1])
+        x1 = min(xy1[0],xy2[0])
+        x2 = max(xy1[0],xy2[0])
+        if y2-y1 ==3:
+            # full walls in y1+1
+            lst1 = map(lambda x: walls[x][y1+1], range(x1,x2+1))
+            # full walls in y1+2
+            lst2 = map(lambda x: walls[x][y1+2], range(x1,x2+1))
+
+            if False in lst2 and False not in lst1: # full walls in y1+1 height
+                
+                r_penalty = 0
+                x_of_right_break_seeker = x2      
+                while walls[x_of_right_break_seeker][y1+1]:
+                    r_penalty += 2
+                    x_of_right_break_seeker +=1
+
+                l_penalty = 0
+                x_of_left_break_seeker = x1
+                while walls[x_of_left_break_seeker][y1+1]:
+                    l_penalty += 2
+                    x_of_left_break_seeker +=1
+
+                penalty = min(r_penalty,l_penalty)
+                totalLength += penalty
+
+            if False in lst1 and False in lst2:
+                pass
+
+
+        
+
+    xy1,xy2,minimum = findClosestManhattanPair([position],MST)
+    totalLength += minimum
+
+
+    
+
+
+
+    return totalLength
+
 # find the cloest pair of points in two sets
 # return a triple in the form of (point1, point2, distance)
 def findClosestEuclideanPair(positions1,positions2):
@@ -609,6 +715,9 @@ def MSTManhattanHeuristic(state, problem):
         foodPositions.remove(xy2)
     return totalLength
 
+def improvedMSTEuclideanHeuristic(state, problem):
+    #if only one left and path is a straight line and there exist any wall, add 3
+    pass
 
 #A is a list of points; A is not []
 def computeMSTCost(lst):
@@ -736,7 +845,7 @@ def wallsManhattanPenalty(xy1,xy2,walls):
     pass#if xy1[0]
 
 
-# This function calculate how many walls are in this positions
+# This function calculate how many walls are in the positions
 # positions is a series of points forming a path
 def wallsPenalty(positions,walls):
     penalty = 0
