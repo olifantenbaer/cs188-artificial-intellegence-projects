@@ -524,7 +524,7 @@ def foodHeuristic(state, problem):
     # return RectilinearMinimumSteinerSpanningTreeHeuristic(state, problem)
 
     # Experiment 5
-    # 248 nodes, optimal, 0.4 sec
+    # 250 nodes, optimal, 0.4 sec
     return MSTManhattanHeuristicWithWallPenaltyHeuristic(state, problem)
 
 
@@ -786,12 +786,20 @@ def horizontalWallPenaltyFunction(xy1,xy2,walls):
         while walls[x_of_right_break_seeker][height]:
             r_penalty += 2
             x_of_right_break_seeker +=1
+            # handle boundry issue
+            if x_of_right_break_seeker == walls.width:
+                r_penalty = float('inf')
+                break
 
         l_penalty = 0
         x_of_left_break_seeker = x1
         while walls[x_of_left_break_seeker][height]:
             l_penalty += 2
-            x_of_left_break_seeker +=1
+            x_of_left_break_seeker -=1
+            # handle boundry issue
+            if x_of_left_break_seeker == 0:
+                l_penalty = float('inf')
+                break
 
         return (r_penalty,l_penalty) 
 
