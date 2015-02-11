@@ -757,7 +757,7 @@ def MSTManhattanHeuristicWithWallPenaltyHeuristic(state, problem):
 
         # give horizontal wall penalty here
         # not all walls information can be used
-        totalLength += horizontalWallPenaltyFunction(xy1,xy2,walls)
+        totalLength += wallPenaltyFunction(xy1,xy2,walls)
 
         '''IN PrOGRESS'''
         #if abs(xy1[0]-xy2[0]) == 2 and abs(xy1[1]-xy2[1]) == 2:
@@ -771,22 +771,28 @@ def MSTManhattanHeuristicWithWallPenaltyHeuristic(state, problem):
     totalLength += minimum
 
     # very important here; still need to consider penalty (or the heuristic is not consistent)
-    totalLength += horizontalWallPenaltyFunction(xy1,xy2,walls)
+    totalLength += wallPenaltyFunction(xy1,xy2,walls)
 
     return totalLength
 
-def horizontalWallPenaltyFunction(xy1,xy2,walls):
+def wallPenaltyFunction(xy1,xy2,walls):
 
     penalty = 0
-    #add horizontal wall penalty 
+
     y1 = min(xy1[1],xy2[1])
     y2 = max(xy1[1],xy2[1])
     x1 = min(xy1[0],xy2[0])
     x2 = max(xy1[0],xy2[0])
 
+
+    # to make sure it is 
+    if y2 - y1 > 3 or x2 - x1 > 3:
+        #return penalty
+        pass
+
+    # 1. horizontal walls
     max_r_p = 0
     max_l_p = 0
-
     for y in range(y1+1,y2):
         lst = map(lambda x: walls[x][y], range(x1,x2+1))
         if False not in lst:
@@ -795,16 +801,45 @@ def horizontalWallPenaltyFunction(xy1,xy2,walls):
                 max_r_p = r_p
             if l_p > max_l_p:
                 max_l_p = l_p
-    penalty = min(max_r_p,max_l_p)
+
+
+    # 2. vertical walls
+    max_u_p = 0 #up
+    max_d_p = 0 #down
+    for x in range(x1+1,x2):
+        lst = map(lambda y: walls[x][y], range(y1,y2+1))
+        if False not in lst:
+            u_p,d_p = (verticalBidirectionWallSearch(y1,y2,x,walls))
+            if u_p > max_u_p:
+                max_u_p = u_p
+            if d_p > max_d_p:
+                max_d_p = d_p
+
+    # two cases depends on the slope
+    '''IN PROGRESS'''
+    max_u_p = 0 #up
+    max_d_p = 0 #down
+    '''END OF IN PROGRESS'''
+    slope = None
+    if x1==x2:
+        slope = float('inf')
+    else:
+        slope = (xy2[1] - xy1[1])*1.0 / (xy2[0] - xy1[0])
+    if slope > 0:
+        penalty = min(max_r_p+max_d_p,max_l_p+max_u_p)
+    else:
+        penalty = min(max_r_p+max_u_p,max_l_p+max_d_p)
+
+
     return penalty
     
 # x1, x2 is the right, left search begining position
-# height is the y position of the search
-def horizontalBidirectionWallSearch(x1,x2,height,walls):
+# y is the y-position of the search
+def horizontalBidirectionWallSearch(x1,x2,y,walls):
     r_penalty = 0
     x_of_right_break_seeker = x2  
 
-    while walls[x_of_right_break_seeker][height]:
+    while walls[x_of_right_break_seeker][y]:
         r_penalty += 2
         x_of_right_break_seeker +=1
         # handle boundry issue
@@ -814,7 +849,7 @@ def horizontalBidirectionWallSearch(x1,x2,height,walls):
 
     l_penalty = 0
     x_of_left_break_seeker = x1
-    while walls[x_of_left_break_seeker][height]:
+    while walls[x_of_left_break_seeker][y]:
         l_penalty += 2
         x_of_left_break_seeker -=1
         # handle boundry issue
@@ -824,8 +859,31 @@ def horizontalBidirectionWallSearch(x1,x2,height,walls):
 
     return (r_penalty,l_penalty) 
 
-def verticalWallPenaltyFunction(xy1,xy2,walls):
-    pass
+# x1, x2 is the right, left search begining position
+# y is the y-position of the search
+def verticalBidirectionWallSearch(y1,y2,x,walls):
+    u_penalty = 0
+    y_of_up_break_seeker = y2  
+
+    while walls[x][y_of_up_break_seeker]:
+        u_penalty += 2
+        y_of_up_break_seeker +=1
+        # handle boundry issue
+        if y_of_up_break_seeker == walls.height:
+            u_penalty = float('inf')
+            break
+
+    d_penalty = 0
+    y_of_down_break_seeker = y1
+    while walls[x][y_of_down_break_seeker]:
+        d_penalty += 2
+        y_of_down_break_seeker -=1
+        # handle boundry issue
+        if y_of_down_break_seeker == 0:
+            d_penalty = float('inf')
+            break
+
+    return (u_penalty,d_penalty) 
 
 ###########################################################################
 # END OF QUESTION # 7
