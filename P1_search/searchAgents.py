@@ -733,7 +733,10 @@ def findClosestManhattanPair(positions1,positions2):
 # use wall penalty (core idea)
 ###########################################################################
 
+
 def MSTManhattanHeuristicWithWallPenaltyHeuristic(state, problem):
+
+    wallsAlreadyPenalized = []
 
     walls = copy.deepcopy(problem.walls)
 
@@ -757,7 +760,13 @@ def MSTManhattanHeuristicWithWallPenaltyHeuristic(state, problem):
 
         # give horizontal wall penalty here
         # not all walls information can be used
-        totalLength += wallPenaltyFunction(xy1,xy2,walls)
+
+        #totalLength += wallPenaltyFunction(xy1,xy2,walls)
+        wallsPenalized = wallPenaltyOnlyOnceFunction(xy1,xy2,walls)
+        wallsPenalized = list(set(wallsPenalized)-set(wallsAlreadyPenalized))
+        wallsAlreadyPenalized += wallsPenalized
+        totalLength += len(wallsPenalized) *2
+        #print wallsAlreadyPenalized
 
         '''IN PrOGRESS'''
         #if abs(xy1[0]-xy2[0]) == 2 and abs(xy1[1]-xy2[1]) == 2:
@@ -771,9 +780,54 @@ def MSTManhattanHeuristicWithWallPenaltyHeuristic(state, problem):
     totalLength += minimum
 
     # very important here; still need to consider penalty (or the heuristic is not consistent)
-    totalLength += wallPenaltyFunction(xy1,xy2,walls)
-
+    #totalLength += wallPenaltyFunction(xy1,xy2,walls)
+    wallsPenalized = wallPenaltyOnlyOnceFunction(xy1,xy2,walls)
+    wallsPenalized = list(set(wallsPenalized)-set(wallsAlreadyPenalized))
+    wallsAlreadyPenalized += wallsPenalized
+    totalLength += len(wallsPenalized) *2
+    #print "****"
     return totalLength
+
+'''Currently, to keep admissibility, only horizontal penalty is considered
+Return a list of penalized walls
+'''
+def wallPenaltyOnlyOnceFunction(xy1,xy2,walls):
+
+    y1 = min(xy1[1],xy2[1])
+    y2 = max(xy1[1],xy2[1])
+    x1 = min(xy1[0],xy2[0])
+    x2 = max(xy1[0],xy2[0])
+
+
+    '''IN PROGRESS'''
+    # to make sure it is admissible
+    if y2 - y1 > 3:
+        #return penalty
+        pass
+    '''END OF IN PROGRESS'''
+
+    max_r_p = 0
+    r_p_walls = []
+    max_l_p = 0
+    l_p_walls = []
+    for y in range(y1+1,y2):
+        lst = map(lambda x: walls[x][y], range(x1,x2+1))
+        if False not in lst:
+            r_p,l_p = (horizontalBidirectionWallSearch(x1,x2,y,walls))
+            if r_p > max_r_p:
+                max_r_p = r_p
+                if r_p != float('inf'):
+                    r_p_walls = map(lambda i: (x2+i,y), range(r_p))
+            if l_p > max_l_p:
+                max_l_p = l_p
+                if l_p != float('inf'):
+                    l_p_walls = map(lambda i: (x2-i,y), range(l_p))
+
+    if max_r_p < max_l_p:
+        return r_p_walls
+    else:
+        return l_p_walls
+
 
 def wallPenaltyFunction(xy1,xy2,walls):
 
@@ -785,10 +839,12 @@ def wallPenaltyFunction(xy1,xy2,walls):
     x2 = max(xy1[0],xy2[0])
 
 
-    # to make sure it is 
-    if y2 - y1 > 3 or x2 - x1 > 3:
+    '''IN PROGRESS'''
+    # to make sure it is admissible
+    if y2 - y1 > 3:
         #return penalty
         pass
+    '''END OF IN PROGRESS'''
 
     # 1. horizontal walls
     max_r_p = 0
