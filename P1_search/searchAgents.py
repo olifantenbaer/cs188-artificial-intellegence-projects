@@ -613,11 +613,50 @@ def shortestManhattanCostThroughAllDestinations(startPosition,destPositions):
         candidates.append(a+b)
     return min(candidates)
 
-# Score: 4/4 
-# 7137 in 16.5 second use 'if len(foodPositions) <1:'
-# 7123 in 16.3 second use 'if len(foodPositions) <6:'
-# 7103 in 62.2 second use 'if len(foodPositions) <7:'
+# Score: 5/4 
+# 425 nodes in 116.7 second use '<8', total cost of 60
+
+# '<1'; y1+1111112; init 0; +=2 --> 62; 0.8; 429
+# '<2'; y1+1111112; init 0; +=2 --> 62; 0.7; 429
+# '<3'; y1+1111112; init 0; +=2 --> 62; 0.8; 429
+# '<4'; y1+1111112; init 0; +=2 --> 62; 0.8; 429
+# '<5'; y1+1111112; init 0; +=2 --> 62; 0.8; 429
+# '<6'; y1+1111112; init 0; +=2 --> 62; 2.0; 429
+# '<7'; y1+1111112; init 0; +=2 --> 60; 13.1; 354
+
+# '<1'; y1+1; init 0; +=2 --> 62; 1.7; 916
+# '<2'; y1+1; init 0; +=2 --> 62; 1.7; 916
+# '<3'; y1+1; init 0; +=2 --> 62; 1.7; 916
+# '<4'; y1+1; init 0; +=2 --> 62; 1.7; 916
+# '<5'; y1+1; init 0; +=2 --> 62; 1.6; 916
+# '<6'; y1+1; init 0; +=2 --> 62; 2.8; 916
+# '<7'; y1+1; init 0; +=2 --> 60; 18.1; 637
+
+# '<1'; y1+1 or y1+2; init 0; +=2 --> 62; 1.6; 916
+# '<2'; y1+1 or y1+2; init 0; +=2 --> 62; 1.6; 916
+# '<3'; y1+1 or y1+2; init 0; +=2 --> 62; 1.7; 916
+# '<4'; y1+1 or y1+2; init 0; +=2 --> 62; 1.6; 916
+# '<5'; y1+1 or y1+2; init 0; +=2 --> 62; 1.7; 916
+# '<6'; y1+1 or y1+2; init 0; +=2 --> 62; 3.2; 916
+# '<7'; y1+1 or y1+2; init 0; +=2 --> 60; 18.3; 637
+
+# '<7'; y1+1111112; init 0.1; +=2 --> 60; 7.9; 300
+
+# '<1'; y1+1111112; init 0.1; +=2 --> 62; 0.6; 361
+# '<1'; y1+1111112; init 1; +=2 --> 62; 0.6; 361
+# '<1'; y1+1111112; init 5; +=2 --> 62; 0.5; 282
+# '<1'; y1+1111112; init 10; +=2 --> 62; 0.4; 240
+
+# '<1'; y1+1111112; init 0; +=0.1 --> 60; 17; 6679
+# '<1'; y1+1111112; init 0; +=0.3 --> 60; 14.2; 5910
+# '<1'; y1+1111112; init 0; +=0.4 --> 60; 12.8; 5428
+# '<1'; y1+1111112; init 0; +=0.45 --> 62; 14; 5818
+# '<1'; y1+1111112; init 0; +=0.5 --> 62; 13.8; 5645
+# '<1'; y1+1111112; init 0; +=1 --> 62; 6.4; 3010
+
 def MSTManhattanHeuristicExceptStatePosition(state, problem):
+
+    lstOfGorizontalWallsAlreadyPenalized = []
 
     walls = copy.deepcopy(problem.walls)
 
@@ -625,7 +664,7 @@ def MSTManhattanHeuristicExceptStatePosition(state, problem):
     foodPositions = foodGrid.asList()
     if len(foodPositions)==0:return 0
 
-    if len(foodPositions) <6:# you can use 7 here
+    if len(foodPositions) <1:# you can also use 7,8 here
         return shortestManhattanCostThroughAllDestinations(position,foodPositions)
     
     cpy = copy.deepcopy(foodPositions)
@@ -640,7 +679,8 @@ def MSTManhattanHeuristicExceptStatePosition(state, problem):
         MST.append(xy2)
         cpy.remove(xy2)
 
-        #add wall penalty
+        #add horizontal wall penalty 
+        #(in each distinct height, you can only penalitize once to stay admissible)
         y1 = min(xy1[1],xy2[1])
         y2 = max(xy1[1],xy2[1])
         x1 = min(xy1[0],xy2[0])
@@ -651,7 +691,52 @@ def MSTManhattanHeuristicExceptStatePosition(state, problem):
             # full walls in y1+2
             lst2 = map(lambda x: walls[x][y1+2], range(x1,x2+1))
 
-            if False in lst2 and False not in lst1: # full walls in y1+1 height
+            if False in lst2 and False not in lst1: # penalize in y1+1 height
+
+                if y1+12222222 in lstOfGorizontalWallsAlreadyPenalized:
+                    pass
+                else:
+                    lstOfGorizontalWallsAlreadyPenalized.append(y1+1)
+                
+                    r_penalty = 0
+                    x_of_right_break_seeker = x2      
+                    while walls[x_of_right_break_seeker][y1+1]:
+                        r_penalty += 2
+                        x_of_right_break_seeker +=1
+
+                    l_penalty = 0
+                    x_of_left_break_seeker = x1
+                    while walls[x_of_left_break_seeker][y1+1]:
+                        l_penalty += 2
+                        x_of_left_break_seeker +=1
+
+                    penalty = min(r_penalty,l_penalty)
+                    totalLength += penalty
+
+            if False in lst1 and False in lst2:
+                pass
+
+    xy1,xy2,minimum = findClosestManhattanPair([position],MST)
+    totalLength += minimum
+
+    #add horizontal wall penalty 
+    #(in each distinct height, you can only penalitize once to stay admissible)
+    y1 = min(xy1[1],xy2[1])
+    y2 = max(xy1[1],xy2[1])
+    x1 = min(xy1[0],xy2[0])
+    x2 = max(xy1[0],xy2[0])
+    if y2-y1 ==3:
+        # full walls in y1+1
+        lst1 = map(lambda x: walls[x][y1+1], range(x1,x2+1))
+        # full walls in y1+2
+        lst2 = map(lambda x: walls[x][y1+2], range(x1,x2+1))
+
+        if False in lst2 and False not in lst1: # penalize in y1+1 height
+
+            if y1+1222222 in lstOfGorizontalWallsAlreadyPenalized:
+                pass
+            else:
+                lstOfGorizontalWallsAlreadyPenalized.append(y1+1)
                 
                 r_penalty = 0
                 x_of_right_break_seeker = x2      
@@ -668,17 +753,10 @@ def MSTManhattanHeuristicExceptStatePosition(state, problem):
                 penalty = min(r_penalty,l_penalty)
                 totalLength += penalty
 
-            if False in lst1 and False in lst2:
-                pass
+        if False in lst1 and False in lst2:
+            pass
 
 
-        
-
-    xy1,xy2,minimum = findClosestManhattanPair([position],MST)
-    totalLength += minimum
-
-
-    
 
 
 
