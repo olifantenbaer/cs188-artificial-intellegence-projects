@@ -524,8 +524,13 @@ def foodHeuristic(state, problem):
     # return RectilinearMinimumSteinerSpanningTreeHeuristic(state, problem)
 
     # Experiment 5
-    # 250 nodes, optimal, 0.4 sec
-    return MSTManhattanHeuristicWithWallPenaltyHeuristic(state, problem)
+    # 170 nodes, optimal, admissible, 0.4 sec
+    
+    foo= MSTManhattanHeuristicWithWallPenaltyHeuristic(state, problem)
+    # if state[0] == (3,1):
+    #     print foo, state[0]
+    #     print ucs(state,problem)
+    return foo
 
 
 ###########################################################################
@@ -733,7 +738,7 @@ def findClosestManhattanPair(positions1,positions2):
 # use wall penalty (core idea)
 ###########################################################################
 
-
+#wallPenaltyOnlyOnceFunction used
 def MSTManhattanHeuristicWithWallPenaltyHeuristic(state, problem):
 
     wallsAlreadyPenalized = []
