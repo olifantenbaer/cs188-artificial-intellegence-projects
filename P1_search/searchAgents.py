@@ -614,153 +614,105 @@ def shortestManhattanCostThroughAllDestinations(startPosition,destPositions):
     return min(candidates)
 
 # Score: 5/4 
-# 425 nodes in 116.7 second use '<8', total cost of 60
-
-# '<1'; y1+1111112; init 0; +=2 --> 62; 0.8; 429
-# '<2'; y1+1111112; init 0; +=2 --> 62; 0.7; 429
-# '<3'; y1+1111112; init 0; +=2 --> 62; 0.8; 429
-# '<4'; y1+1111112; init 0; +=2 --> 62; 0.8; 429
-# '<5'; y1+1111112; init 0; +=2 --> 62; 0.8; 429
-# '<6'; y1+1111112; init 0; +=2 --> 62; 2.0; 429
-# '<7'; y1+1111112; init 0; +=2 --> 60; 13.1; 354
-
-# '<1'; y1+1; init 0; +=2 --> 62; 1.7; 916
-# '<2'; y1+1; init 0; +=2 --> 62; 1.7; 916
-# '<3'; y1+1; init 0; +=2 --> 62; 1.7; 916
-# '<4'; y1+1; init 0; +=2 --> 62; 1.7; 916
-# '<5'; y1+1; init 0; +=2 --> 62; 1.6; 916
-# '<6'; y1+1; init 0; +=2 --> 62; 2.8; 916
-# '<7'; y1+1; init 0; +=2 --> 60; 18.1; 637
-
-# '<1'; y1+1 or y1+2; init 0; +=2 --> 62; 1.6; 916
-# '<2'; y1+1 or y1+2; init 0; +=2 --> 62; 1.6; 916
-# '<3'; y1+1 or y1+2; init 0; +=2 --> 62; 1.7; 916
-# '<4'; y1+1 or y1+2; init 0; +=2 --> 62; 1.6; 916
-# '<5'; y1+1 or y1+2; init 0; +=2 --> 62; 1.7; 916
-# '<6'; y1+1 or y1+2; init 0; +=2 --> 62; 3.2; 916
-# '<7'; y1+1 or y1+2; init 0; +=2 --> 60; 18.3; 637
-
-# '<7'; y1+1111112; init 0.1; +=2 --> 60; 7.9; 300
-
-# '<1'; y1+1111112; init 0.1; +=2 --> 62; 0.6; 361
-# '<1'; y1+1111112; init 1; +=2 --> 62; 0.6; 361
-# '<1'; y1+1111112; init 5; +=2 --> 62; 0.5; 282
-# '<1'; y1+1111112; init 10; +=2 --> 62; 0.4; 240
-
-# '<1'; y1+1111112; init 0; +=0.1 --> 60; 17; 6679
-# '<1'; y1+1111112; init 0; +=0.3 --> 60; 14.2; 5910
-# '<1'; y1+1111112; init 0; +=0.4 --> 60; 12.8; 5428
-# '<1'; y1+1111112; init 0; +=0.45 --> 62; 14; 5818
-# '<1'; y1+1111112; init 0; +=0.5 --> 62; 13.8; 5645
-# '<1'; y1+1111112; init 0; +=1 --> 62; 6.4; 3010
+# 248 nodes; find cost of 60 in 0.4 sec
 
 def MSTManhattanHeuristicExceptStatePosition(state, problem):
-
-    lstOfGorizontalWallsAlreadyPenalized = []
 
     walls = copy.deepcopy(problem.walls)
 
     position, foodGrid = state
     foodPositions = foodGrid.asList()
+
+    # goal test
     if len(foodPositions)==0:return 0
 
-    if len(foodPositions) <1:# you can also use 7,8 here
-        return shortestManhattanCostThroughAllDestinations(position,foodPositions)
-    
     cpy = copy.deepcopy(foodPositions)
     totalLength = 0
     MST = [cpy.pop()]
+
     while len(cpy) != 0:
+
         xy1,xy2,minimum = findClosestManhattanPair(MST,cpy)
 
-        #xy1,xy2,minimum = findClosestEuclideanPair2(MST,foodPositions,state)
-        #print xy1,xy2,minimum
         totalLength += minimum
         MST.append(xy2)
         cpy.remove(xy2)
 
-        #add horizontal wall penalty 
-        #(in each distinct height, you can only penalitize once to stay admissible)
-        y1 = min(xy1[1],xy2[1])
-        y2 = max(xy1[1],xy2[1])
-        x1 = min(xy1[0],xy2[0])
-        x2 = max(xy1[0],xy2[0])
-        if y2-y1 ==3:
-            # full walls in y1+1
-            lst1 = map(lambda x: walls[x][y1+1], range(x1,x2+1))
-            # full walls in y1+2
-            lst2 = map(lambda x: walls[x][y1+2], range(x1,x2+1))
+        # give horizontal wall penalty here
+        # not all walls information can be used
+        totalLength += horizontalWallPenaltyFunction(xy1,xy2,walls)
 
-            if False in lst2 and False not in lst1: # penalize in y1+1 height
-
-                if y1+12222222 in lstOfGorizontalWallsAlreadyPenalized:
-                    pass
-                else:
-                    lstOfGorizontalWallsAlreadyPenalized.append(y1+1)
-                
-                    r_penalty = 0
-                    x_of_right_break_seeker = x2      
-                    while walls[x_of_right_break_seeker][y1+1]:
-                        r_penalty += 2
-                        x_of_right_break_seeker +=1
-
-                    l_penalty = 0
-                    x_of_left_break_seeker = x1
-                    while walls[x_of_left_break_seeker][y1+1]:
-                        l_penalty += 2
-                        x_of_left_break_seeker +=1
-
-                    penalty = min(r_penalty,l_penalty)
-                    totalLength += penalty
-
-            if False in lst1 and False in lst2:
-                pass
-
+    # an optimization here:
+    #   do not include the pacaman location in the MST first; add it at the end
     xy1,xy2,minimum = findClosestManhattanPair([position],MST)
     totalLength += minimum
 
+    # very important here; still need to consider penalty (or the heuristic is not consistent)
+    totalLength += horizontalWallPenaltyFunction(xy1,xy2,walls)
+
+    return totalLength
+
+
+# prerequisite: height difference between xy1 and xy2 can only be: 2 or 3
+def horizontalWallPenaltyFunction(xy1,xy2,walls):
+
+    penalty = 0
     #add horizontal wall penalty 
-    #(in each distinct height, you can only penalitize once to stay admissible)
     y1 = min(xy1[1],xy2[1])
     y2 = max(xy1[1],xy2[1])
     x1 = min(xy1[0],xy2[0])
     x2 = max(xy1[0],xy2[0])
+
+    def bidirectionWallSearch(height):
+        r_penalty = 0
+        x_of_right_break_seeker = x2  
+
+        while walls[x_of_right_break_seeker][height]:
+            r_penalty += 2
+            x_of_right_break_seeker +=1
+
+        l_penalty = 0
+        x_of_left_break_seeker = x1
+        while walls[x_of_left_break_seeker][height]:
+            l_penalty += 2
+            x_of_left_break_seeker +=1
+
+        return (r_penalty,l_penalty) 
+
+    # when height difference is 3
     if y2-y1 ==3:
         # full walls in y1+1
         lst1 = map(lambda x: walls[x][y1+1], range(x1,x2+1))
         # full walls in y1+2
         lst2 = map(lambda x: walls[x][y1+2], range(x1,x2+1))
 
+        # has a hole in y1+2 height (so can pass through)
         if False in lst2 and False not in lst1: # penalize in y1+1 height
 
-            if y1+1222222 in lstOfGorizontalWallsAlreadyPenalized:
-                pass
-            else:
-                lstOfGorizontalWallsAlreadyPenalized.append(y1+1)
-                
-                r_penalty = 0
-                x_of_right_break_seeker = x2      
-                while walls[x_of_right_break_seeker][y1+1]:
-                    r_penalty += 2
-                    x_of_right_break_seeker +=1
+            penalty = min(bidirectionWallSearch(y1+1))
 
-                l_penalty = 0
-                x_of_left_break_seeker = x1
-                while walls[x_of_left_break_seeker][y1+1]:
-                    l_penalty += 2
-                    x_of_left_break_seeker +=1
+        # has a hole in y1+1 height (so can pass through)
+        elif False in lst1 and False in lst2: # penalize in y1+2 height
+            penalty = min(bidirectionWallSearch(y1+2))
 
-                penalty = min(r_penalty,l_penalty)
-                totalLength += penalty
+        # both y1+1 and y1+2 height are fullly blocked
+        elif False not in lst2 and False not in lst1:
 
-        if False in lst1 and False in lst2:
-            pass
+            r_p1,l_p1 = (bidirectionWallSearch(y1+1))
+            r_p2,l_p2 = (bidirectionWallSearch(y1+2))
 
+            # find a least penalized direction
+            penalty = min(max(r_p1,r_p2),max(l_p1,l_p2))
 
+    # when height difference is 2
+    elif y2-y1 ==2:
+        lst = map(lambda x: walls[x][y1+1], range(x1,x2+1))
 
+        # full wall
+        if False not in lst:
+            penalty = min(bidirectionWallSearch(y1+1))
 
-
-    return totalLength
+    return penalty
 
 # find the cloest pair of points in two sets
 # return a triple in the form of (point1, point2, distance)
