@@ -806,10 +806,8 @@ def wallPenaltyOnlyOnceFunction(xy1,xy2,walls):
 
     '''IN PROGRESS'''
     # to make sure it is admissible
-    if y2 - y1 > 3:
-        #return penalty
-        pass
-    '''END OF IN PROGRESS'''
+    if y2 - y1 > 3 or x2 - x1 > 3:
+        return []
 
     max_r_p = 0
     r_p_walls = []
@@ -828,10 +826,43 @@ def wallPenaltyOnlyOnceFunction(xy1,xy2,walls):
                 if l_p != float('inf'):
                     l_p_walls = map(lambda i: (x2-i,y), range(l_p))
 
-    if max_r_p < max_l_p:
-        return r_p_walls
+    '''IN PROGRESS'''
+    # 2. vertical walls
+    max_u_p = 0 #up
+    u_p_walls = []
+    max_d_p = 0 #down
+    d_p_walls = []
+    for x in range(x1+1,x2):
+        lst = map(lambda y: walls[x][y], range(y1,y2+1))
+        if False not in lst:
+            u_p,d_p = (verticalBidirectionWallSearch(y1,y2,x,walls))
+            if u_p > max_u_p:
+                max_u_p = u_p
+                if u_p != float('inf'):
+                    u_p_walls = map(lambda i: (x,y2+i), range(u_p))
+            if d_p > max_d_p:
+                max_d_p = d_p
+                if d_p != float('inf'):
+                    d_p_walls = map(lambda i: (x,y2-i), range(d_p))
+
+    # two cases depends on the slope    
+    slope = None
+    if x1==x2:
+        slope = float('inf')
     else:
-        return l_p_walls
+        slope = (xy2[1] - xy1[1])*1.0 / (xy2[0] - xy1[0])
+    if slope > 0:
+        if max_r_p+max_d_p < max_l_p+max_u_p:
+            return r_p_walls + d_p_walls # no duplicates positions
+        else:
+            return l_p_walls + u_p_walls
+    else:
+        if max_r_p+max_u_p < max_l_p+max_d_p:
+            return r_p_walls + u_p_walls
+        else:
+            return l_p_walls + d_p_walls
+
+    '''END OF IN PROGRESS'''
 
 
 def wallPenaltyFunction(xy1,xy2,walls):
