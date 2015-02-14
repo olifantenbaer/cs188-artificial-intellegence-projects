@@ -213,7 +213,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         for action in legalMoves:
             v1=(self.minValue(gameState.generateSuccessor(self.index,action),alpha,beta,currentDepth,self.index+1)[0],action)
             v = max(v,v1,key=lambda x:x[0])
-            if v[0]>= beta: return v
+            if v[0]> beta: return v
             alpha = max(alpha,v[0])
         return v
 
@@ -237,8 +237,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             for action in legalMoves:
                 v1=(self.maxValue(gameState.generateSuccessor(agentIndex,action),alpha,beta,currentDepth)[0],action)
                 v = min(v,v1,key=lambda x:x[0])
-                if v[0]<= alpha: 
-                    return v
+                if v[0]< alpha: return v
                 beta = min(beta,v[0])
             return v
         else:
@@ -246,7 +245,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             for action in legalMoves:
                 v1 = (self.minValue(gameState.generateSuccessor(agentIndex,action),alpha,beta,currentDepth,nextAgentIndex)[0],action)
                 v = min(v,v1,key=lambda x:x[0])
-                if v[0]<= alpha: return v
+                if v[0]< alpha: return v
                 beta = min(beta,v[0])
             return v
 
