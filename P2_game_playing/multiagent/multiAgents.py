@@ -154,24 +154,17 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns the total number of agents in the game
         """
         "*** YOUR CODE HERE ***"
-        legalMoves = gameState.getLegalActions(self.index)
-        states = [gameState.generateSuccessor(self.index, action) for action in legalMoves]
-        # print self.Minimax(self.index,gameState,0)
-        # exit()
-        scores = [self.Minimax(self.index+1,state,0) for state in states]
-        bestScore = max(scores)
-        bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
-        chosenIndex = random.choice(bestIndices) # Pick randomly among the best
-        return legalMoves[chosenIndex]
+        return self.Minimax(self.index,gameState,0)[1]
+
     
     def Minimax(self,agentIndex,gameState,currentDepth):
         if currentDepth == self.depth:
-            return self.evaluationFunction(gameState)
+            return (self.evaluationFunction(gameState),None)
 
         legalMoves = gameState.getLegalActions(agentIndex)
 
         if len(legalMoves) == 0:
-            return self.evaluationFunction(gameState)
+            return (self.evaluationFunction(gameState),None)
 
         num = gameState.getNumAgents()
 
@@ -181,17 +174,12 @@ class MinimaxAgent(MultiAgentSearchAgent):
         else:
             nextAgentIndex = agentIndex + 1
 
-        '''
-        for i in range(5):
-            return i+1
-
-        Output:1
-        '''
-
         if agentIndex == self.index:
-            return max([self.Minimax(nextAgentIndex,gameState.generateSuccessor(agentIndex, action),currentDepth) for action in legalMoves])
+            return max( [(self.Minimax(nextAgentIndex,gameState.generateSuccessor\
+                (agentIndex, action),currentDepth)[0],action) for action in legalMoves],key=lambda x:x[0])
         else:
-            return min([self.Minimax(nextAgentIndex,gameState.generateSuccessor(agentIndex, action),currentDepth) for action in legalMoves])
+            return min( [(self.Minimax(nextAgentIndex,gameState.generateSuccessor\
+                (agentIndex, action),currentDepth)[0],action) for action in legalMoves],key=lambda x:x[0])
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
@@ -207,14 +195,12 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
     def maxValue(self,gameState,alpha,beta,currentDepth):
         if currentDepth == self.depth:
-            foo= (self.evaluationFunction(gameState),None)
-            return foo
+            return (self.evaluationFunction(gameState),None)
 
         legalMoves = gameState.getLegalActions(self.index)
 
         if len(legalMoves) == 0:
-            foo= (self.evaluationFunction(gameState),None)
-            return foo
+            return (self.evaluationFunction(gameState),None)
 
         v = (-float('inf'),None)
         for action in legalMoves:
@@ -232,8 +218,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         legalMoves = gameState.getLegalActions(agentIndex)
 
         if len(legalMoves) == 0:
-            foo= (self.evaluationFunction(gameState),None)
-            return foo
+            return (self.evaluationFunction(gameState),None)
 
         num = gameState.getNumAgents()
         v = (float('inf'),None)
