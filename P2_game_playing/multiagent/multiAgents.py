@@ -109,6 +109,7 @@ def scoreEvaluationFunction(currentGameState):
     This evaluation function is meant for use with adversarial search agents
     (not reflex agents).
     """
+    #return betterEvaluationFunction(currentGameState)
     return currentGameState.getScore()
 
 class MultiAgentSearchAgent(Agent):
@@ -257,7 +258,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legalMoves = gameState.getLegalActions(self.index)
 
         v = -float('inf')
-
+        
+        bestAction = None
         for action in legalMoves:
             nextState = gameState.generateSuccessor(self.index, action)
             v1 = v
@@ -323,7 +325,43 @@ def betterEvaluationFunction(currentGameState):
       DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    return currentGameState.getScore()
+    # 1) ghost
+    GhostStates = currentGameState.getGhostStates()
+    GhostPositions = currentGameState.getGhostPositions()
+    newScaredTimes = [ghostState.scaredTimer for ghostState in GhostStates]
+    
+    # 2) pacman
+    pacmanPos = currentGameState.getPacmanPosition()
+
+	# 3) food
+    currentFood = currentGameState.getFood()
+    currentFoodList = currentFood.asList()
+    foodNum = currentGameState.getNumFood()
+    capsules = currentGameState.getCapsules()
+    
+    foodDistance = float('inf')   
+    for food in currentFoodList:
+    	distance1 = manhattanDistance(food, pacmanPos)
+        foodDistance = min(distance1,foodDistance)
+        
+    capsuleDistance = float('inf')
+    for capsule in capsules:
+    	tmp = manhattanDistance(capsule, pacmanPos)
+    	capsuleDistance = min(tmp,capsuleDistance)
+    
+    ghostDistance = float('inf')
+    for ghost in GhostPositions:
+        distance2 = manhattanDistance(ghost, pacmanPos)
+        ghostDistance = min(distance2, ghostDistance)
+
+
+    if ghostDistance == 0:
+        return -float('inf')
+    else:
+        ghostDistance = 0
+        
+    return 30.0/foodDistance + ghostDistance - foodNum
+
 
 # Abbreviation
 better = betterEvaluationFunction
