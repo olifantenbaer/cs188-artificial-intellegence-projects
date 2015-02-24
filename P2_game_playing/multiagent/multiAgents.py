@@ -336,31 +336,36 @@ def betterEvaluationFunction(currentGameState):
 	# 3) food
     currentFood = currentGameState.getFood()
     currentFoodList = currentFood.asList()
-    foodNum = currentGameState.getNumFood()
+    foodNum = currentGameState.getNumFood() + 1
+
     capsules = currentGameState.getCapsules()
+
     
     foodDistance = float('inf')   
     for food in currentFoodList:
     	distance1 = manhattanDistance(food, pacmanPos)
         foodDistance = min(distance1,foodDistance)
-        
+
+
     capsuleDistance = float('inf')
     for capsule in capsules:
-    	tmp = manhattanDistance(capsule, pacmanPos)
-    	capsuleDistance = min(tmp,capsuleDistance)
-    
+    	distance3 = manhattanDistance(capsule, pacmanPos)
+    	capsuleDistance = min(distance3,capsuleDistance)
+
+
     ghostDistance = float('inf')
     for ghost in GhostPositions:
         distance2 = manhattanDistance(ghost, pacmanPos)
         ghostDistance = min(distance2, ghostDistance)
 
 
-    if ghostDistance == 0:
-        return -float('inf')
+    if ghostDistance < 2:
+        return -1000000
     else:
         ghostDistance = 0
         
-    return 30.0/foodDistance + ghostDistance - foodNum
+    return 1.0/foodDistance + ghostDistance + 1000.0/foodNum
+
 
 
 # Abbreviation
