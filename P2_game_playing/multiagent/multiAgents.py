@@ -321,6 +321,7 @@ def betterEvaluationFunction(currentGameState):
     GhostStates = currentGameState.getGhostStates()
     GhostPositions = currentGameState.getGhostPositions()
     newScaredTimes = [ghostState.scaredTimer for ghostState in GhostStates]
+    scaredGhostsNum = len(newScaredTimes) + 1
     
     # 2) pacman
     pacmanPos = currentGameState.getPacmanPosition()
@@ -331,6 +332,7 @@ def betterEvaluationFunction(currentGameState):
     foodNum = currentGameState.getNumFood() + 1
 
     capsules = currentGameState.getCapsules()
+    capsuleNum = len(capsules) +1
 
     
     foodDistance = float('inf')   
@@ -356,7 +358,16 @@ def betterEvaluationFunction(currentGameState):
     else:
         ghostDistance = 0
         
-    return 1.0/foodDistance + ghostDistance + 1000.0/foodNum
+        
+        
+    # design:
+    # 1) the distance to the nearest food should be short (1.0/foodDistance)
+    # 2) eat a food is a great bonus (1000.0/foodNum)
+    # 3) when the nearest ghost is 1 step away, you should go away from it (even there is a capsule or a food there; the only exception is the scared ghost)
+    # 4) a strategy here is to first find a capsule and eat it and then go straight to eat the ghost (1000000000000.0/scaredGhostsNum 100000.0/capsuleNum)
+    # 5) currentGameState.getScore() is an interesting and magic trick which I don't know but can do something good:)
+    return 1.0/foodDistance + ghostDistance + 1000.0/foodNum + 1000000000000.0/scaredGhostsNum + currentGameState.getScore() + 100000.0/capsuleNum
+
 
 
 
