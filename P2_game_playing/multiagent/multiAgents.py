@@ -241,6 +241,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 beta = min(beta,v[0])
             return v
 
+
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (question 4)
@@ -254,45 +255,32 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           legal moves.
         """
         "*** YOUR CODE HERE ***"
+        return self.maxValue(gameState,0)[1]
 
-        legalMoves = gameState.getLegalActions(self.index)
-
-        v = -float('inf')
-        
-        bestAction = None
-        for action in legalMoves:
-            nextState = gameState.generateSuccessor(self.index, action)
-            v1 = v
-            v = max(v1, self.expectValue(self.index + 1, nextState, 0))
-            if v > v1:
-                bestAction = action
-
-        return bestAction
-
+		
 
     def maxValue(self, gameState, currentDepth):
 
         if currentDepth == self.depth or gameState.isWin() == True or gameState.isLose() == True:
-            return self.evaluationFunction(gameState)
+            return (self.evaluationFunction(gameState),None)
 
         legalMoves = gameState.getLegalActions(self.index)
 
-        v = -float('inf')
+        v = (-float('inf'),None)
 
         for action in legalMoves:
-
-            nextState = gameState.generateSuccessor(self.index, action)
-            v1 = (self.expectValue(self.index + 1, nextState, currentDepth))
-            v = max(v, v1)
+        	if action == 'Stop':continue
+        	nextState = gameState.generateSuccessor(self.index, action)
+        	v1 = (self.expectValue(self.index + 1, nextState, currentDepth)[0],action)
+        	v = max(v, v1,key=lambda x:x[0])
 
         return v
-
 
 
     def expectValue(self, agentIndex, gameState, currentDepth):
 
         if currentDepth == self.depth or gameState.isWin() == True or gameState.isLose() == True:
-            return self.evaluationFunction(gameState)
+            return (self.evaluationFunction(gameState),None)
 
         legalMoves = gameState.getLegalActions(agentIndex)
 
@@ -305,17 +293,21 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             currentDepth += 1
 
             for action in legalMoves:
-                nextState = gameState.generateSuccessor(agentIndex, action)
-                totalValue += self.maxValue(nextState, currentDepth)
+            	if action == 'Stop':continue
+            	nextState = gameState.generateSuccessor(agentIndex, action)
+            	totalValue += self.maxValue(nextState, currentDepth)[0]
 
         else:
             nextAgentIndex = agentIndex + 1
 
             for action in legalMoves:
-                nextState = gameState.generateSuccessor(agentIndex, action)
-                totalValue += self.expectValue(nextAgentIndex, nextState, currentDepth)
+            	if action == 'Stop':continue
+            	nextState = gameState.generateSuccessor(agentIndex, action)
+            	totalValue += self.expectValue(nextAgentIndex, nextState, currentDepth)[0]
 
-        return totalValue / float(len(legalMoves))
+        return (totalValue / float(len(legalMoves)),'random')
+
+
 
 def betterEvaluationFunction(currentGameState):
     """
