@@ -101,7 +101,7 @@ class QLearningAgent(ReinforcementAgent):
         if random_move:
             action = random.choice(legalActions)
         else:
-            action = computeActionFromQValues(state)
+            action = self.computeActionFromQValues(state)
         return action
 
     def update(self, state, action, nextState, reward):
