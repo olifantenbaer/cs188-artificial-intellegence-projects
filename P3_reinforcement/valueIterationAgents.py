@@ -56,6 +56,7 @@ class ValueIterationAgent(ValueEstimationAgent):
           self.values = new.copy()
 
 
+
     def getValue(self, state):
         """
           Return the value of the state (computed in __init__).
