@@ -230,11 +230,13 @@ class ExactInference(InferenceModule):
         "*** YOUR CODE HERE ***"
         allPossible = util.Counter()
 
+        # Equation: P(newPos) = \sum\limits_oldPos {P(newPos|oldPos)*P(oldPos)}
+        # Example: Lec 26 slides pp. 9
         for oldPos in self.legalPositions:
             newPosDist = self.getPositionDistribution(self.setGhostPosition(gameState, oldPos))
-
+            oldBeliefs = self.beliefs[oldPos]
             for newPos, prob in newPosDist.items():
-                allPossible[newPos] += prob * self.beliefs[oldPos]
+                allPossible[newPos] += prob * oldBeliefs
 
         self.beliefs = allPossible
 

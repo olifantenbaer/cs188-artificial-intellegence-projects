@@ -164,19 +164,21 @@ class GreedyBustersAgent(BustersAgent):
              if livingGhosts[i+1]]
         "*** YOUR CODE HERE ***"
 
-        localMax = []
-        for belief in livingGhostPositionDistributions:
-            localMax.append(belief.argMax())
-
-        goalCoordinate, goalProbability = None, 0
-        for index, coordinate in enumerate(localMax):
-            if livingGhostPositionDistributions[index][coordinate] >= goalProbability:
-                goalCoordinate, goalProbability = coordinate, livingGhostPositionDistributions[index][coordinate]
-
-        temp = []
+        # Step 1: compute the most likely position of each ghost
+        livingGhostsPositions = [dist.argMax() for dist in livingGhostPositionDistributions]
+        
+        # Step 2: find the closest ghost
+        livingGhostsDistances = []
+        for ghostPos in livingGhostsPositions:
+            livingGhostsDistances.append((self.distancer.getDistance(pacmanPosition, ghostPos),ghostPos))
+        targetGhostPos = min(livingGhostsDistances)[1]
+       
+        # Step 3: for all possible actions, compute new distance after pacman take the action
+        newDistances = []
         for action in legal:
-            nextLocation = Actions.getSuccessor(pacmanPosition, action)
-            temp.append((self.distancer.getDistance(nextLocation, goalCoordinate), action))
-
-        return min(temp)[1]
+            newPacmanPos = Actions.getSuccessor(pacmanPosition, action)
+            newDistance = self.distancer.getDistance(newPacmanPos, targetGhostPos)
+            newDistances.append((newDistance,action))
+        
+        return min(newDistances)[1]
 
