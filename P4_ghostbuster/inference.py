@@ -273,15 +273,10 @@ class ParticleFilter(InferenceModule):
         weight with each position) is incorrect and may produce errors.
         """
         "*** YOUR CODE HERE ***"
-
-        count = 0
         self.particles = []
-
-        while count < self.numParticles:
-            for position in self.legalPositions:
-                if count < self.numParticles:
-                    self.particles.append(position)
-                    count += 1
+        numLegalPositions = len(self.legalPositions)
+        for i in range(self.numParticles):
+            self.particles.append(self.legalPositions[i%numLegalPositions])
 
     def observe(self, observation, gameState):
         """
@@ -315,24 +310,33 @@ class ParticleFilter(InferenceModule):
         pacmanPosition = gameState.getPacmanPosition()
         "*** YOUR CODE HERE ***"
 
-        if noisyDistance == None:
-            jailCounter = util.Counter()
-            jailCounter[self.getJailPosition()] = 1.0
-            self.beliefs = jailCounter
-        else:
-            tempCounter = util.Counter()
-            for p in self.particles:
-                trueDistance = util.manhattanDistance(p, pacmanPosition)
-                tempCounter[p] += emissionModel[trueDistance]
-            self.beliefs = tempCounter
+        # References: Textbook pp. 598-599
 
-        if self.beliefs.totalCount() == 0:
-            self.initializeUniformly(gameState)
+        # jail edge case
+        if noisyDistance == None:
+            pos = self.getJailPosition()
+            self.particles = [pos]*self.numParticles
+            return
+
+        # Step 1: calculate weightss
+        weights = util.Counter()
+        for pos,prob in self.getBeliefDistribution().items():
+            trueDistance = util.manhattanDistance(pos, pacmanPosition)
+            weights[pos] = emissionModel[trueDistance]*prob
+        weights.normalize()
+
+
+        # Step 2: resample based on the weights
+        if weights.totalCount() == 0:
+            self.initializeUniformly(gameState) # edge case
         else:
-            self.beliefs.normalize()
-            for i in range(len(self.particles)):
-                newPos = util.sample(self.beliefs)
-                self.particles[i] = newPos
+            distribution = []
+            values = []
+            for pos, prob in weights.items():
+                values.append(pos)
+                distribution.append(prob)
+
+            self.particles = util.nSample(distribution, values, self.numParticles)
 
 
     def elapseTime(self, gameState):
@@ -350,7 +354,6 @@ class ParticleFilter(InferenceModule):
         a belief distribution.
         """
         "*** YOUR CODE HERE ***"
-
         newParticles = []
 
         for oldPos in self.particles:
@@ -368,6 +371,7 @@ class ParticleFilter(InferenceModule):
         Counter object)
         """
         "*** YOUR CODE HERE ***"
+
         beliefDistribution = util.Counter()
 
         for position in self.particles:
